@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"context"
+	"strconv"
 
 	gerrors "github.com/elojah/gbs-jwt/pkg/errors"
 	gojwt "github.com/golang-jwt/jwt"
@@ -12,6 +13,7 @@ type App interface {
 	UpdateSecret(context.Context, Secret) (Secret, error)
 	DeleteSecret(context.Context, Secret) (Secret, error)
 	ListSecret(context.Context) (SecretList, error)
+	RefreshSecret(context.Context) (SecretList, error)
 }
 
 // Basic CRUD store
@@ -27,7 +29,17 @@ func (s Secret) JWT(key string) (string, error) {
 	claims := gojwt.MapClaims{}
 
 	for k, v := range s.Claims {
-		claims[k] = v
+		// exp needs to be float64 to be considered valid
+		if k == "exp" {
+			n, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				continue
+			}
+
+			claims[k] = n
+		} else {
+			claims[k] = v
+		}
 	}
 
 	ss, err := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims).SignedString([]byte(key))
@@ -66,6 +78,17 @@ func NewSecret(name string, v string, key string) (Secret, error) {
 	}
 
 	for k, v := range claims {
+		if k == "exp" {
+			f, ok := v.(float64)
+			if !ok {
+				continue
+			}
+
+			secret.Claims[k] = strconv.FormatFloat(f, 'f', 0, 64)
+
+			continue
+		}
+
 		s, ok := v.(string)
 		if !ok {
 			continue

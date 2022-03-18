@@ -57,11 +57,6 @@ func (a *App) UpdateSecret(ctx context.Context, secret jwt.Secret) (jwt.Secret, 
 		secret.Claims["exp"] = strconv.Itoa(int(time.Now().Add(a.DefaultExp).Unix()))
 	}
 
-	// if no expiration is set, set default here
-	if _, ok := secret.Claims["exp"]; !ok {
-		secret.Claims["exp"] = strconv.Itoa(int(time.Now().Add(a.DefaultExp).Unix()))
-	}
-
 	s, err := secret.JWT(a.Key)
 	if err != nil {
 		return jwt.Secret{}, err
@@ -112,10 +107,62 @@ func (a *App) ListSecret(ctx context.Context) (jwt.SecretList, error) {
 				// ok, still list it
 			} else {
 				merr = multierror.Append(merr, err)
+
+				continue
 			}
 		}
 
 		result.Secrets = append(result.Secrets, secret)
+	}
+
+	if err := merr.ErrorOrNil(); err != nil {
+		return jwt.SecretList{}, err
+	}
+
+	return result, nil
+}
+
+func (a *App) RefreshSecret(ctx context.Context) (jwt.SecretList, error) {
+	ss, err := a.Store.ListAll(ctx)
+	if err != nil {
+		return jwt.SecretList{}, err
+	}
+
+	var merr *multierror.Error
+
+	var result jwt.SecretList
+
+	// preallocate secrets
+	result.Secrets = make([]jwt.Secret, 0, len(ss))
+
+	for k, v := range ss {
+		secret, err := jwt.NewSecret(k, v, a.Key)
+		if err != nil {
+			if errors.As(err, &gerrors.ErrJWTValidation{}) {
+
+				// refresh token
+				secret.Claims["exp"] = strconv.Itoa(int(time.Now().Add(a.DefaultExp).Unix()))
+				token, err := secret.JWT(a.Key)
+				if err != nil {
+					merr = multierror.Append(merr, err)
+
+					continue
+				}
+
+				// update refreshed token
+				if err := a.Store.Update(ctx, secret.Name, token); err != nil {
+					merr = multierror.Append(merr, err)
+
+					continue
+				}
+			} else {
+				merr = multierror.Append(merr, err)
+
+				continue
+			}
+
+			result.Secrets = append(result.Secrets, secret)
+		}
 	}
 
 	if err := merr.ErrorOrNil(); err != nil {

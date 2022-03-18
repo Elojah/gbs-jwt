@@ -30,7 +30,7 @@ all: secrets
 
 .PHONY: secrets
 secrets:  ## Build secrets binary
-	$(info $(M) building executable auth…) @
+	$(info $(M) building executable secrets…) @
 	$Q cd cmd/$(SECRETS) && $(GO) build \
 		-mod=readonly \
 		-tags release \

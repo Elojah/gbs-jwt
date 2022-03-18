@@ -84,7 +84,7 @@ func run(prog string, filename string) {
 
 		// TODO set from config
 		Key:        "somerandomencryptedstr",
-		DefaultExp: time.Duration(1 * time.Hour),
+		DefaultExp: time.Duration(10 * time.Second),
 	}
 
 	// init handler
@@ -107,9 +107,25 @@ func run(prog string, filename string) {
 
 	cs = append(cs, &grpcsecrets)
 
+	// launch grpc server
 	go func() {
 		if err := grpcsecrets.Serve(ctx); err != nil {
 			log.Error().Err(err).Msg("failed to serve grpc")
+		}
+	}()
+
+	// launch ticker for refresh tokens
+	// TODO set from config
+	ticker := time.NewTicker(3 * time.Second)
+
+	go func() {
+		for range ticker.C {
+			result, err := h.jwt.RefreshSecret(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msg("failed to refresh token")
+			}
+
+			log.Info().Msgf("refreshed %d tokens", len(result.Secrets))
 		}
 	}()
 
