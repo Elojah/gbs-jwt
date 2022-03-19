@@ -30,6 +30,10 @@ func (a *App) CreateSecret(ctx context.Context, secret jwt.Secret) (jwt.Secret, 
 		return jwt.Secret{}, gerrors.ErrAlreadyExist{Index: secret.Name}
 	}
 
+	if secret.Claims == nil {
+		secret.Claims = make(map[string]string)
+	}
+
 	// if no expiration is set, set default here
 	if _, ok := secret.Claims["exp"]; !ok {
 		secret.Claims["exp"] = strconv.Itoa(int(time.Now().Add(a.DefaultExp).Unix()))

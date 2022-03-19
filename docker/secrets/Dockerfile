@@ -1,7 +1,7 @@
 # builder
-FROM golang:1.15.2 AS builder
-ARG GITHUB_TOKEN
+FROM golang:1.16.0 AS builder
 WORKDIR /secrets
+ARG GITHUB_TOKEN
 COPY . .
 RUN echo "prod" > .version
 RUN echo "machine github.com\n\tlogin elojah\n\tpassword ${GITHUB_TOKEN}" >> ~/.netrc

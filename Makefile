@@ -114,3 +114,9 @@ version: ## Print current project version
 help: ## Print this
 	@grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: image
+image: ## Build and run local image
+	$(info $(M) running docker…) @
+	$Q docker build -t secrets -f docker/secrets/Dockerfile .
+	$Q docker run -dp 8082:8082 secrets

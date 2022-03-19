@@ -18,11 +18,17 @@ Try in local version:
 $ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test0"}' -plaintext localhost:8082 grpc.Secrets/Create
 $ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test1"}' -plaintext localhost:8082 grpc.Secrets/Create
 $ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test2"}' -plaintext localhost:8082 grpc.Secrets/Create
-$ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test3"}' -plaintext localhost:8082 grpc.Secrets/Create
+$ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test3", "claims": {"claimtest": "value"}}' -plaintext localhost:8082 grpc.Secrets/Create
 
 $ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{}' -plaintext localhost:8082 grpc.Secrets/List
+
+$ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test3", "claims": {"claimtest": "valueother"}}' -plaintext localhost:8082 grpc.Secrets/Update
+
+$ grpcurl -v -import-path ../../.. -proto cmd/secrets/grpc/secrets.proto -d '{"name": "test3"}' -plaintext localhost:8082 grpc.Secrets/Delete
+
 ```
 
 
 ## questions
-- Using 2 external (personal) libraries for go-grpc and go-log, ok or replace ?
+- claims should be map[string]interface{} all along instead of map[string]string
+

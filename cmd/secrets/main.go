@@ -84,7 +84,7 @@ func run(prog string, filename string) {
 
 		// TODO set from config
 		Key:        "somerandomencryptedstr",
-		DefaultExp: time.Duration(10 * time.Second),
+		DefaultExp: time.Duration(10 * time.Minute),
 	}
 
 	// init handler
@@ -116,7 +116,7 @@ func run(prog string, filename string) {
 
 	// launch ticker for refresh tokens
 	// TODO set from config
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(3 * time.Minute)
 
 	go func() {
 		for range ticker.C {
